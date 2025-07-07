@@ -14,7 +14,10 @@ parser.add_argument('-i','--input_dir',  required=True,
 parser.add_argument('-o','--output_dir', required=True,
                     help='Dir to save *.nii.gz segmentations')
 parser.add_argument('--ckpt_path',       default='checkpoints/MedSAM2_latest.pt')
-parser.add_argument('--yaml',           default='sam2.1_hiera_tiny_finetune512')
+parser.add_argument('--config_path',     default='sam2/configs',
+                    help='Path to config directory')
+parser.add_argument('--yaml',           default='sam2.1_hiera_t512',
+                    help='Config name without .yaml extension')
 parser.add_argument('--device',         default='cuda:0')
 parser.add_argument('--prompt_mode',    default='mask+point', 
                     choices=['auto', 'center', 'box', 'mask', 'mask+point', 'mask+box', 'point_only', 'box_only', 'none'],
@@ -44,10 +47,31 @@ if args.data_structure == 'us3d':
 
 # ---------- Build model ----------
 print("Loading MedSAM2 model...")
-sam2_model = build_sam2(config_file=args.yaml,
-                        ckpt_path=args.ckpt_path,
-                        device=args.device,
-                        mode='eval')
+from hydra import compose
+from hydra.utils import instantiate
+from omegaconf import OmegaConf
+
+# Use compose with config_path and config_name
+cfg = compose(
+    config_path=args.config_path,
+    config_name=args.yaml,
+)
+OmegaConf.resolve(cfg)
+sam2_model = instantiate(cfg.model, _recursive_=True)
+
+# Load checkpoint
+if args.ckpt_path:
+    import torch
+    sd = torch.load(args.ckpt_path, map_location="cpu", weights_only=True)["model"]
+    missing_keys, unexpected_keys = sam2_model.load_state_dict(sd)
+    print(f"Loaded checkpoint: {args.ckpt_path}")
+    if missing_keys:
+        print(f"Missing keys: {missing_keys}")
+    if unexpected_keys:
+        print(f"Unexpected keys: {unexpected_keys}")
+
+sam2_model = sam2_model.to(args.device)
+sam2_model.eval()
 predictor = SAM2ImagePredictor(sam2_model)
 print("Model loaded successfully!")
 
