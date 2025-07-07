@@ -52,18 +52,20 @@ from hydra.utils import instantiate
 from omegaconf import OmegaConf
 
 # Use compose with config_name
-# Change to config directory temporarily
-import os
-original_cwd = os.getcwd()
-os.chdir(args.config_path)
+# Set up Hydra config search path
+import hydra
+from hydra.core.config_store import ConfigStore
+from hydra.core.singleton import Singleton
 
-try:
-    cfg = compose(
-        config_name=args.yaml,
-    )
-finally:
-    # Restore original working directory
-    os.chdir(original_cwd)
+# Clear any existing config
+if hasattr(Singleton, '_instances'):
+    Singleton._instances.clear()
+
+# Use compose with config_name
+# Simple approach: use relative path from current directory
+cfg = compose(
+    config_name=args.yaml,
+)
 OmegaConf.resolve(cfg)
 sam2_model = instantiate(cfg.model, _recursive_=True)
 

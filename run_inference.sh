@@ -33,7 +33,7 @@ python infer_medsam2_ultrasound.py \
     --prompt_mode mask+point \
     --data_structure us3d \
     --config_path sam2/configs \
-    --yaml sam2.1_hiera_t512 \
+    --yaml sam2.1_hiera_tiny_finetune512 \
     --device 0
 
 echo "✅ Inference completed!"
