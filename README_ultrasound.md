@@ -21,7 +21,8 @@ python infer_medsam2_ultrasound.py \
     -o ./results \
     --prompt_from_gt \
     --gt_dir ./data/labels \
-    --prompt_mode mask+point
+    --prompt_mode mask+point \
+    --data_structure us3d
 ```
 
 ### Fine-tuning
@@ -43,11 +44,26 @@ python train_ultrasound.py --device 0
 
 ## Data Format
 
+### UNet Format (Default)
 ```
 📂data_ultrasound/
    ├── case_0001.nii.gz          # 3D volume (H×W×D, float32)
    ├── case_0002.nii.gz
    └── ...
+```
+
+### US3D Format (Organized)
+```
+📂data_ultrasound/
+   ├── volumes/
+   │   ├── case_0001.nii.gz
+   │   └── case_0002.nii.gz
+   ├── labels/
+   │   ├── case_0001.nii.gz
+   │   └── case_0002.nii.gz
+   └── prompts/
+       ├── case_0001.nii.gz
+       └── case_0002.nii.gz
 ```
 
 ## Output
@@ -68,12 +84,15 @@ python train_ultrasound.py --device 0
 
 ## Prompt Modes
 
-MedSAM2 supports multiple types of prompts:
+MedSAM2 supports multiple types of prompts with intelligent filtering:
 
-- **`auto`**: Uses center point as foreground prompt (recommended)
+- **`mask+point`**: Combined mask and center of mass point (recommended)
+- **`point_only`**: Center of mass point with variance filtering
+- **`box_only`**: Bounding box with variance filtering
+- **`mask`**: Exact object mask
+- **`box`**: Bounding box around object
+- **`auto`**: Uses center point as foreground prompt
 - **`center`**: Manual center point prompt
-- **`box`**: Uses center bounding box prompt
-- **`mask`**: Uses center circular mask prompt
 - **`none`**: No prompts (may not work well)
 
 ### Ground Truth Prompts (Intelligent)
@@ -97,17 +116,20 @@ The script will automatically:
 ### Examples
 
 ```bash
-# Point prompt (default)
-python infer_medsam2_ultrasound.py -i ./data -o ./results --prompt_mode auto
+# Point prompt with variance filtering
+python infer_medsam2_ultrasound.py -i ./data -o ./results --prompt_mode point_only
 
-# Box prompt
-python infer_medsam2_ultrasound.py -i ./data -o ./results --prompt_mode box --box_size 150
+# Box prompt with variance filtering
+python infer_medsam2_ultrasound.py -i ./data -o ./results --prompt_mode box_only
 
-# Mask prompt
-python infer_medsam2_ultrasound.py -i ./data -o ./results --prompt_mode mask --mask_radius 75
+# Combined mask and point (recommended)
+python infer_medsam2_ultrasound.py -i ./data -o ./results --prompt_mode mask+point
 
 # Ground truth prompts (intelligent)
-python infer_medsam2_ultrasound.py -i ./data -o ./results --prompt_from_gt --gt_dir ./ground_truth --prompt_mode auto
+python infer_medsam2_ultrasound.py -i ./data -o ./results --prompt_from_gt --gt_dir ./ground_truth --prompt_mode mask+point
+
+# US3D data structure
+python infer_medsam2_ultrasound.py -i ./data -o ./results --data_structure us3d --prompt_mode mask+point
 ```
 
 ## Tips
