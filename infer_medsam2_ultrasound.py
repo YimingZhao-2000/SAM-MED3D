@@ -51,11 +51,19 @@ from hydra import compose
 from hydra.utils import instantiate
 from omegaconf import OmegaConf
 
-# Use compose with config_path and config_name
-cfg = compose(
-    config_path=args.config_path,
-    config_name=args.yaml,
-)
+# Use compose with config_name
+# Change to config directory temporarily
+import os
+original_cwd = os.getcwd()
+os.chdir(args.config_path)
+
+try:
+    cfg = compose(
+        config_name=args.yaml,
+    )
+finally:
+    # Restore original working directory
+    os.chdir(original_cwd)
 OmegaConf.resolve(cfg)
 sam2_model = instantiate(cfg.model, _recursive_=True)
 
