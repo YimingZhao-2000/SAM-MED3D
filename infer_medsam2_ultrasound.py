@@ -47,40 +47,13 @@ if args.data_structure == 'us3d':
 
 # ---------- Build model ----------
 print("Loading MedSAM2 model...")
-from hydra import compose
-from hydra.utils import instantiate
-from omegaconf import OmegaConf
 
-# Use compose with config_name
-# Initialize Hydra properly
-import hydra
-from hydra.core.global_hydra import GlobalHydra
-
-# Initialize Hydra if not already initialized
-if not GlobalHydra.instance().is_initialized():
-    GlobalHydra.instance().clear()
-    hydra.initialize(config_path=args.config_path)
-
-# Use compose with config_name
-cfg = compose(
-    config_name=args.yaml,
-)
-OmegaConf.resolve(cfg)
-sam2_model = instantiate(cfg.model, _recursive_=True)
-
-# Load checkpoint
-if args.ckpt_path:
-    import torch
-    sd = torch.load(args.ckpt_path, map_location="cpu", weights_only=True)["model"]
-    missing_keys, unexpected_keys = sam2_model.load_state_dict(sd)
-    print(f"Loaded checkpoint: {args.ckpt_path}")
-    if missing_keys:
-        print(f"Missing keys: {missing_keys}")
-    if unexpected_keys:
-        print(f"Unexpected keys: {unexpected_keys}")
-
-sam2_model = sam2_model.to(args.device)
-sam2_model.eval()
+# Use the same approach as examples - direct config file path
+config_file = os.path.join(args.config_path, f"{args.yaml}.yaml")
+sam2_model = build_sam2(config_file=config_file,
+                        ckpt_path=args.ckpt_path,
+                        device=args.device,
+                        mode='eval')
 predictor = SAM2ImagePredictor(sam2_model)
 print("Model loaded successfully!")
 
