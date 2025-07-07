@@ -52,17 +52,16 @@ from hydra.utils import instantiate
 from omegaconf import OmegaConf
 
 # Use compose with config_name
-# Set up Hydra config search path
+# Initialize Hydra properly
 import hydra
-from hydra.core.config_store import ConfigStore
-from hydra.core.singleton import Singleton
+from hydra.core.global_hydra import GlobalHydra
 
-# Clear any existing config
-if hasattr(Singleton, '_instances'):
-    Singleton._instances.clear()
+# Initialize Hydra if not already initialized
+if not GlobalHydra.instance().is_initialized():
+    GlobalHydra.instance().clear()
+    hydra.initialize(config_path=args.config_path)
 
 # Use compose with config_name
-# Simple approach: use relative path from current directory
 cfg = compose(
     config_name=args.yaml,
 )
