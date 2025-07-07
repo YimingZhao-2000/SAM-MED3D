@@ -34,21 +34,26 @@ class UltrasoundDataLoader:
         """
         data_files = []
         
-        # Find all PPM files (data files)
-        ppm_files = list(self.data_dir.glob("*PPM.nnrd"))
+        # Find all .nnrd files (data files)
+        volume_files = list(self.data_dir.glob("*.nnrd"))
         
-        for ppm_file in ppm_files:
-            # Extract base name (date_id_part_numberPPM)
-            base_name = ppm_file.stem
+        for volume_file in volume_files:
+            # Skip mask files (they end with _Mask.seg.nnrd)
+            if volume_file.name.endswith("_Mask.seg.nnrd"):
+                continue
+                
+            # Extract base name (everything before .nnrd)
+            base_name = volume_file.stem
             
-            # Look for corresponding mask file
-            mask_file = ppm_file.parent / f"{base_name}_Mask.nnrd"
+            # Look for corresponding mask file (with _Mask.seg.nnrd extension)
+            mask_file = volume_file.parent / f"{base_name}_Mask.seg.nnrd"
             
             if mask_file.exists():
-                data_files.append((str(ppm_file), str(mask_file)))
-                print(f"✅ Found pair: {ppm_file.name} ↔ {mask_file.name}")
+                data_files.append((str(volume_file), str(mask_file)))
+                print(f"✅ Found pair: {volume_file.name} ↔ {mask_file.name}")
             else:
-                print(f"⚠️  No mask found for: {ppm_file.name}")
+                print(f"⚠️  No mask found for: {volume_file.name}")
+                print(f"   Expected mask file: {mask_file.name}")
         
         print(f"📁 Found {len(data_files)} data-label pairs")
         return data_files
@@ -115,29 +120,32 @@ class UltrasoundDataLoader:
         """
         filename = Path(data_file).name
         
-        # Parse date_id_part_numberPPM.nnrd
-        # Example: 20240101_001_001_001PPM.nnrd
-        pattern = r'(\d{8})_(\d{3})_(\d{3})_(\d{3})PPM\.nnrd'
-        match = re.match(pattern, filename)
+        # Parse any .nnrd file (flexible naming)
+        # Extract base name for any file ending with .nnrd
+        base_name = filename.replace('.nnrd', '')
+        
+        # Try to parse structured naming if it matches the pattern
+        pattern = r'(\d{8})_(\d{6})_([A-Z]{2,3})_(\d{2})PPM'
+        match = re.match(pattern, base_name)
         
         if match:
-            date, id_num, part, number = match.groups()
+            date, id_6digits, id_2to3chars, number = match.groups()
             return {
                 'date': date,
-                'id': id_num,
-                'part': part,
+                'id_6digits': id_6digits,
+                'id_2to3chars': id_2to3chars,
                 'number': number,
                 'filename': filename,
-                'base_name': filename.replace('.nnrd', '')
+                'base_name': base_name
             }
         else:
-            # Fallback for different naming patterns
+            # Fallback for any naming pattern
             return {
                 'filename': filename,
-                'base_name': filename.replace('.nnrd', ''),
+                'base_name': base_name,
                 'date': 'unknown',
-                'id': 'unknown',
-                'part': 'unknown',
+                'id_6digits': 'unknown',
+                'id_2to3chars': 'unknown',
                 'number': 'unknown'
             }
     

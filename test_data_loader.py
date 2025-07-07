@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Test script for ultrasound data loader
-Tests the specific data format: date_id_part_numberPPM.nnrd and date_id_part_numberPPM_Mask.nnrd
+Tests the specific data format: *.nnrd and *_Mask.seg.nnrd
 """
 
 import os
@@ -22,8 +22,8 @@ def test_data_loader():
     if not os.path.exists(test_data_dir):
         print(f"❌ Test data directory not found: {test_data_dir}")
         print("Please create the directory and add your ultrasound data files:")
-        print("  - date_id_part_numberPPM.nnrd (volume files)")
-        print("  - date_id_part_numberPPM_Mask.nnrd (label files)")
+        print("  - *.nnrd (volume files)")
+        print("  - *_Mask.seg.nnrd (label files)")
         return False
     
     print(f"🔍 Testing data loader with directory: {test_data_dir}")
@@ -35,8 +35,8 @@ def test_data_loader():
         if not loader.data_files:
             print("❌ No data files found!")
             print("Expected files:")
-            print("  - *PPM.nnrd (volume files)")
-            print("  - *PPM_Mask.nnrd (label files)")
+            print("  - *.nnrd (volume files)")
+            print("  - *_Mask.seg.nnrd (label files)")
             return False
         
         print(f"✅ Found {len(loader.data_files)} data-label pairs")
@@ -62,8 +62,8 @@ def test_data_loader():
             file_info = loader.get_file_info(data_file)
             print(f"✅ File info:")
             print(f"   Date: {file_info['date']}")
-            print(f"   ID: {file_info['id']}")
-            print(f"   Part: {file_info['part']}")
+            print(f"   ID (6 digits): {file_info['id_6digits']}")
+            print(f"   ID (2-3 chars): {file_info['id_2to3chars']}")
             print(f"   Number: {file_info['number']}")
             print(f"   Volume shape: {vol_data.shape}")
             print(f"   Label shape: {lbl_data.shape}")
@@ -114,10 +114,10 @@ def create_sample_data():
         lbl_data[mask] = 1
     
     # Save sample files
-    sample_name = "20240101_001_001_001PPM"
+    sample_name = "20240101_123456_AB_01PPM"
     
     vol_file = test_dir / f"{sample_name}.nnrd"
-    lbl_file = test_dir / f"{sample_name}_Mask.nnrd"
+    lbl_file = test_dir / f"{sample_name}_Mask.seg.nnrd"
     
     # Save as NIfTI files (nnrd format is typically NIfTI)
     vol_nib = nib.Nifti1Image(vol_data, affine=np.eye(4))

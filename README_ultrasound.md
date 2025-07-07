@@ -15,8 +15,8 @@ python test_data_loader.py
 
 # 3. Prepare your ultrasound data
 # Place your *.nnrd files in ultrasound_data/ directory:
-# - date_id_part_numberPPM.nnrd (volume files)
-# - date_id_part_numberPPM_Mask.nnrd (label files)
+# - *.nnrd (volume files)
+# - *_Mask.seg.nnrd (label files)
 
 # 3. Run inference with ultrasound data
 python infer_medsam2_ultrasound.py \
@@ -48,25 +48,26 @@ python train_ultrasound.py --device 0
 ### Ultrasound Data Format (Server)
 ```
 📂ultrasound_data/
-   ├── 20240101_001_001_001PPM.nnrd          # 3D volume (H×W×D, float32)
-   ├── 20240101_001_001_001PPM_Mask.nnrd     # 3D label (H×W×D, uint8)
-   ├── 20240101_001_001_002PPM.nnrd
-   ├── 20240101_001_001_002PPM_Mask.nnrd
+   ├── volume1.nnrd                            # 3D volume (H×W×D, float32)
+   ├── volume1_Mask.seg.nnrd                   # 3D label (H×W×D, uint8)
+   ├── 20240101_123456_AB_01PPM.nnrd          # 3D volume (H×W×D, float32)
+   ├── 20240101_123456_AB_01PPM_Mask.seg.nnrd # 3D label (H×W×D, uint8)
    └── ...
 ```
 
 **File Naming Convention:**
-- `date_id_part_numberPPM.nnrd` - Volume files
-- `date_id_part_numberPPM_Mask.nnrd` - Label files
-- Example: `20240101_001_001_001PPM.nnrd` and `20240101_001_001_001PPM_Mask.nnrd`
+- `*.nnrd` - Volume files (any name ending with .nnrd)
+- `*_Mask.seg.nnrd` - Label files (same base name + _Mask.seg.nnrd)
+- Example: `volume1.nnrd` and `volume1_Mask.seg.nnrd`
+- Example: `20240101_123456_AB_01PPM.nnrd` and `20240101_123456_AB_01PPM_Mask.seg.nnrd`
 
 ### Output Formats
 
 #### UNet Format (Default)
 ```
 📂results/
-   ├── 20240101_001_001_001PPM.nii.gz        # Segmentation result
-   ├── 20240101_001_001_002PPM.nii.gz
+   ├── 20240101_123456_AB_01PPM.nii.gz        # Segmentation result
+   ├── 20240101_123456_CD_02PPM.nii.gz
    └── ...
 ```
 
@@ -74,14 +75,14 @@ python train_ultrasound.py --device 0
 ```
 📂results/
    ├── volumes/
-   │   ├── 20240101_001_001_001PPM.nii.gz
-   │   └── 20240101_001_001_002PPM.nii.gz
+   │   ├── 20240101_123456_AB_01PPM.nii.gz
+   │   └── 20240101_123456_CD_02PPM.nii.gz
    ├── labels/
-   │   ├── 20240101_001_001_001PPM.nii.gz
-   │   └── 20240101_001_001_002PPM.nii.gz
+   │   ├── 20240101_123456_AB_01PPM.nii.gz
+   │   └── 20240101_123456_CD_02PPM.nii.gz
    └── prompts/
-       ├── 20240101_001_001_001PPM.nii.gz
-       └── 20240101_001_001_002PPM.nii.gz
+       ├── 20240101_123456_AB_01PPM.nii.gz
+       └── 20240101_123456_CD_02PPM.nii.gz
 ```
 
 ## Output
