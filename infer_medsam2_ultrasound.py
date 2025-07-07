@@ -5,11 +5,12 @@ from tqdm import tqdm
 from sam2.build_sam import build_sam2
 from sam2.sam2_image_predictor import SAM2ImagePredictor
 from scipy import ndimage
+from ultrasound_data_loader import UltrasoundDataLoader
 
 # ---------- CLI ----------
 parser = argparse.ArgumentParser()
 parser.add_argument('-i','--input_dir',  required=True,
-                    help='Dir containing *.nii.gz volumes')
+                    help='Dir containing ultrasound data files (*PPM.nnrd)')
 parser.add_argument('-o','--output_dir', required=True,
                     help='Dir to save *.nii.gz segmentations')
 parser.add_argument('--ckpt_path',       default='checkpoints/MedSAM2_latest.pt')
@@ -206,42 +207,47 @@ def get_gt_filename(input_filename, gt_dir, gt_suffix):
     
     return None
 
+# ---------- Initialize data loader ----------
+print("🔍 Initializing ultrasound data loader...")
+data_loader = UltrasoundDataLoader(args.input_dir)
+
+if not data_loader.data_files:
+    print("❌ No data files found! Please check your data directory.")
+    exit(1)
+
+print(f"✅ Found {len(data_loader.data_files)} data-label pairs")
+
 # ---------- Iterate volumes ----------
-vol_paths = [p for p in os.listdir(args.input_dir)
-             if p.endswith('.nii') or p.endswith('.nii.gz')]
-
-for fname in tqdm(vol_paths, desc='Volumes'):
-    vol_nib = nib.load(os.path.join(args.input_dir, fname))
-    vol_np  = vol_nib.get_fdata().astype(np.float32)  # (H,W,D)
-    H,W,D   = vol_np.shape
-
-    seg_stack = np.zeros((H,W,D), np.uint8)
+for data_file, label_file in tqdm(data_loader.data_files, desc='Processing volumes'):
+    # Load volume and label
+    vol_data, lbl_data = data_loader.load_volume_and_label(data_file, label_file)
     
-    # Load ground truth if available
-    gt_nib = None
-    if args.prompt_from_gt and args.gt_dir:
-        gt_path = get_gt_filename(fname, args.gt_dir, args.gt_suffix)
-        if gt_path:
-            try:
-                gt_nib = nib.load(gt_path)
-                print(f"  Using ground truth: {gt_path}")
-            except Exception as e:
-                print(f"  Warning: Could not load ground truth {gt_path}: {e}")
-        else:
-            print(f"  Warning: No ground truth found for {fname}")
+    if vol_data is None or lbl_data is None:
+        print(f"❌ Failed to load {data_file}")
+        continue
+    
+    # Validate data
+    if not data_loader.validate_data(vol_data, lbl_data):
+        print(f"⚠️  Skipping invalid data: {data_file}")
+        continue
+    
+    H, W, D = vol_data.shape
+    seg_stack = np.zeros((H, W, D), np.uint8)
+    
+    # Get file info for naming
+    file_info = data_loader.get_file_info(data_file)
+    output_name = f"{file_info['base_name']}.nii.gz"
 
     for z in range(D):
-        slc = vol_np[:,:,z]
+        slc = vol_data[:,:,z]
         rgb_slice = preprocess_slice(slc)  # (H,W,3) uint8
         
         # Set image for predictor
         predictor.set_image(rgb_slice)
         
-        # Try to get ground truth prompt if available
-        gt_prompt = None
-        if args.prompt_from_gt and args.gt_dir and gt_nib is not None:
-            gt_slice = gt_nib.get_fdata()[:,:,z].astype(np.float32)
-            gt_prompt = generate_prompt_from_gt(gt_slice, args.prompt_mode)
+        # Generate prompt from label data (always available)
+        gt_slice = lbl_data[:,:,z].astype(np.float32)
+        gt_prompt = generate_prompt_from_gt(gt_slice, args.prompt_mode)
         
         # Generate prompts based on mode
         if gt_prompt is not None:
@@ -314,26 +320,27 @@ for fname in tqdm(vol_paths, desc='Volumes'):
     # ---------- 保存 ----------
     if args.data_structure == 'us3d':
         # Save in US3D structure
-        base_name = fname.replace('.nii.gz', '').replace('.nii', '')
+        base_name = file_info['base_name']
         
         # Save volume
-        vol_output_path = os.path.join(args.output_dir, 'volumes', fname)
+        vol_output_path = os.path.join(args.output_dir, 'volumes', output_name)
+        vol_nib = nib.Nifti1Image(vol_data, affine=np.eye(4))
         nib.save(vol_nib, vol_output_path)
         
         # Save segmentation
-        seg_output_path = os.path.join(args.output_dir, 'labels', fname)
-        seg_nib = nib.Nifti1Image(seg_stack.astype(np.uint8), affine=vol_nib.affine)
+        seg_output_path = os.path.join(args.output_dir, 'labels', output_name)
+        seg_nib = nib.Nifti1Image(seg_stack.astype(np.uint8), affine=np.eye(4))
         nib.save(seg_nib, seg_output_path)
         
-        # Save prompts (if available)
-        if args.prompt_from_gt and gt_nib is not None:
-            prompt_output_path = os.path.join(args.output_dir, 'prompts', fname)
-            nib.save(gt_nib, prompt_output_path)
+        # Save prompts (label data)
+        prompt_output_path = os.path.join(args.output_dir, 'prompts', output_name)
+        lbl_nib = nib.Nifti1Image(lbl_data, affine=np.eye(4))
+        nib.save(lbl_nib, prompt_output_path)
     else:
         # Save in UNet structure
-        seg_nib = nib.Nifti1Image(seg_stack.astype(np.uint8), affine=vol_nib.affine)
-        nib.save(seg_nib, os.path.join(args.output_dir, fname))
+        seg_nib = nib.Nifti1Image(seg_stack.astype(np.uint8), affine=np.eye(4))
+        nib.save(seg_nib, os.path.join(args.output_dir, output_name))
     
-    print(f'[OK] {fname}  →  {seg_stack.mean():.3f} foreground ratio')
+    print(f'[OK] {output_name}  →  {seg_stack.mean():.3f} foreground ratio')
 
 print('All done!') 

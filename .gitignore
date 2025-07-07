@@ -11,3 +11,11 @@ _C.*
 outputs/*
 checkpoints/*.pt
 *.pt
+
+# Ultrasound data protection
+ultrasound_data/
+examples/ultrasound_data/
+data/
+*.nnrd
+*PPM*
+*_Mask.nnrd

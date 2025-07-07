@@ -10,17 +10,18 @@ Simple, direct approach for 3D ultrasound segmentation using MedSAM2.
 # 1. Setup environment
 bash setup_ultrasound.sh
 
-# 2. Prepare data (UNet format)
-mkdir -p data/volumes data/labels
-# Copy your *.nii.gz volumes to data/volumes/
-# Copy your *.nii.gz labels to data/labels/
+# 2. Test data loader (optional)
+python test_data_loader.py
 
-# 3. Run inference with ground truth prompts
+# 3. Prepare your ultrasound data
+# Place your *.nnrd files in ultrasound_data/ directory:
+# - date_id_part_numberPPM.nnrd (volume files)
+# - date_id_part_numberPPM_Mask.nnrd (label files)
+
+# 3. Run inference with ultrasound data
 python infer_medsam2_ultrasound.py \
-    -i ./data/volumes \
+    -i ./ultrasound_data \
     -o ./results \
-    --prompt_from_gt \
-    --gt_dir ./data/labels \
     --prompt_mode mask+point \
     --data_structure us3d
 ```
@@ -44,26 +45,43 @@ python train_ultrasound.py --device 0
 
 ## Data Format
 
-### UNet Format (Default)
+### Ultrasound Data Format (Server)
 ```
-📂data_ultrasound/
-   ├── case_0001.nii.gz          # 3D volume (H×W×D, float32)
-   ├── case_0002.nii.gz
+📂ultrasound_data/
+   ├── 20240101_001_001_001PPM.nnrd          # 3D volume (H×W×D, float32)
+   ├── 20240101_001_001_001PPM_Mask.nnrd     # 3D label (H×W×D, uint8)
+   ├── 20240101_001_001_002PPM.nnrd
+   ├── 20240101_001_001_002PPM_Mask.nnrd
    └── ...
 ```
 
-### US3D Format (Organized)
+**File Naming Convention:**
+- `date_id_part_numberPPM.nnrd` - Volume files
+- `date_id_part_numberPPM_Mask.nnrd` - Label files
+- Example: `20240101_001_001_001PPM.nnrd` and `20240101_001_001_001PPM_Mask.nnrd`
+
+### Output Formats
+
+#### UNet Format (Default)
 ```
-📂data_ultrasound/
+📂results/
+   ├── 20240101_001_001_001PPM.nii.gz        # Segmentation result
+   ├── 20240101_001_001_002PPM.nii.gz
+   └── ...
+```
+
+#### US3D Format (Organized)
+```
+📂results/
    ├── volumes/
-   │   ├── case_0001.nii.gz
-   │   └── case_0002.nii.gz
+   │   ├── 20240101_001_001_001PPM.nii.gz
+   │   └── 20240101_001_001_002PPM.nii.gz
    ├── labels/
-   │   ├── case_0001.nii.gz
-   │   └── case_0002.nii.gz
+   │   ├── 20240101_001_001_001PPM.nii.gz
+   │   └── 20240101_001_001_002PPM.nii.gz
    └── prompts/
-       ├── case_0001.nii.gz
-       └── case_0002.nii.gz
+       ├── 20240101_001_001_001PPM.nii.gz
+       └── 20240101_001_001_002PPM.nii.gz
 ```
 
 ## Output
@@ -125,11 +143,14 @@ python infer_medsam2_ultrasound.py -i ./data -o ./results --prompt_mode box_only
 # Combined mask and point (recommended)
 python infer_medsam2_ultrasound.py -i ./data -o ./results --prompt_mode mask+point
 
-# Ground truth prompts (intelligent)
-python infer_medsam2_ultrasound.py -i ./data -o ./results --prompt_from_gt --gt_dir ./ground_truth --prompt_mode mask+point
+# Test data loader
+python test_data_loader.py
+
+# Run inference with ultrasound data
+python infer_medsam2_ultrasound.py -i ./ultrasound_data -o ./results --prompt_mode mask+point
 
 # US3D data structure
-python infer_medsam2_ultrasound.py -i ./data -o ./results --data_structure us3d --prompt_mode mask+point
+python infer_medsam2_ultrasound.py -i ./ultrasound_data -o ./results --data_structure us3d --prompt_mode mask+point
 ```
 
 ## Tips
