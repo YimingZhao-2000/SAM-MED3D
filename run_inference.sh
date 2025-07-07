@@ -46,16 +46,16 @@ python infer_medsam2_ultrasound.py \
     -o ./results \
     --prompt_mode mask+point \
     --data_structure us3d \
-    --calculate_loss \
-    --save_metrics \
-    --log_file ${LOG_FILE} \
-    --metrics_file ${METRICS_FILE} \
-    --monitor_progress \
     --device 0 2>&1 | tee ${LOG_FILE}
 
 # Check if inference was successful
 if [ $? -eq 0 ]; then
     echo "✅ Inference completed successfully!"
+    
+    # Run monitoring to calculate metrics
+    echo ""
+    echo "📊 Calculating metrics..."
+    python monitor_inference.py -i ./ultrasound_data -o ./results -r ${METRICS_FILE}
     
     # Display summary
     echo ""
@@ -65,26 +65,6 @@ if [ $? -eq 0 ]; then
     echo "Output files: $(find results/ -name "*.nii.gz" | wc -l)"
     echo "Log file: ${LOG_FILE}"
     echo "Metrics file: ${METRICS_FILE}"
-    
-    # Show metrics if available
-    if [ -f "${METRICS_FILE}" ]; then
-        echo ""
-        echo "📈 Metrics Summary:"
-        echo "=================="
-        python -c "
-import json
-import sys
-try:
-    with open('${METRICS_FILE}', 'r') as f:
-        metrics = json.load(f)
-    print(f'Dice Score: {metrics.get(\"dice_score\", \"N/A\"):.4f}')
-    print(f'Hausdorff Distance: {metrics.get(\"hausdorff_distance\", \"N/A\"):.4f}')
-    print(f'IoU Score: {metrics.get(\"iou_score\", \"N/A\"):.4f}')
-    print(f'Processing Time: {metrics.get(\"processing_time\", \"N/A\"):.2f}s')
-except Exception as e:
-    print(f'Could not read metrics: {e}')
-"
-    fi
     
 else
     echo "❌ Inference failed! Check the log file: ${LOG_FILE}"
