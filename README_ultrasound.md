@@ -14,9 +14,9 @@ bash setup_ultrasound.sh
 python test_data_loader.py
 
 # 3. Prepare your ultrasound data
-# Place your *.nnrd files in ultrasound_data/ directory:
-# - *.nnrd (volume files)
-# - *_Mask.seg.nnrd (label files)
+# Place your *.nrrd files in ultrasound_data/ directory:
+# - *.nrrd (volume files)
+# - *_Mask.seg.nrrd (label files)
 
 # 3. Run inference with ultrasound data
 python infer_medsam2_ultrasound.py \
@@ -48,18 +48,18 @@ python train_ultrasound.py --device 0
 ### Ultrasound Data Format (Server)
 ```
 📂ultrasound_data/
-   ├── volume1.nnrd                            # 3D volume (H×W×D, float32)
-   ├── volume1_Mask.seg.nnrd                   # 3D label (H×W×D, uint8)
-   ├── 20240101_123456_AB_01PPM.nnrd          # 3D volume (H×W×D, float32)
-   ├── 20240101_123456_AB_01PPM_Mask.seg.nnrd # 3D label (H×W×D, uint8)
+   ├── volume1.nrrd                            # 3D volume (H×W×D, float32)
+   ├── volume1_Mask.seg.nrrd                   # 3D label (H×W×D, uint8)
+   ├── 20240101_123456_AB_01PPM.nrrd          # 3D volume (H×W×D, float32)
+   ├── 20240101_123456_AB_01PPM_Mask.seg.nrrd # 3D label (H×W×D, uint8)
    └── ...
 ```
 
 **File Naming Convention:**
-- `*.nnrd` - Volume files (any name ending with .nnrd)
-- `*_Mask.seg.nnrd` - Label files (same base name + _Mask.seg.nnrd)
-- Example: `volume1.nnrd` and `volume1_Mask.seg.nnrd`
-- Example: `20240101_123456_AB_01PPM.nnrd` and `20240101_123456_AB_01PPM_Mask.seg.nnrd`
+- `*.nrrd` - Volume files (any name ending with .nrrd)
+- `*_Mask.seg.nrrd` - Label files (same base name + _Mask.seg.nrrd)
+- Example: `volume1.nrrd` and `volume1_Mask.seg.nrrd`
+- Example: `20240101_123456_AB_01PPM.nrrd` and `20240101_123456_AB_01PPM_Mask.seg.nrrd`
 
 ### Output Formats
 

@@ -16,6 +16,6 @@ checkpoints/*.pt
 ultrasound_data/
 examples/ultrasound_data/
 data/
-*.nnrd
+*.nrrd
 *PPM*
-*_Mask.nnrd
+*_Mask.seg.nrrd

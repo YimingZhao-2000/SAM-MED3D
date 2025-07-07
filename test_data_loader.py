@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Test script for ultrasound data loader
-Tests the specific data format: *.nnrd and *_Mask.seg.nnrd
+Tests the specific data format: *.nrrd and *_Mask.seg.nrrd
 """
 
 import os
@@ -22,8 +22,8 @@ def test_data_loader():
     if not os.path.exists(test_data_dir):
         print(f"❌ Test data directory not found: {test_data_dir}")
         print("Please create the directory and add your ultrasound data files:")
-        print("  - *.nnrd (volume files)")
-        print("  - *_Mask.seg.nnrd (label files)")
+        print("  - *.nrrd (volume files)")
+        print("  - *_Mask.seg.nrrd (label files)")
         return False
     
     print(f"🔍 Testing data loader with directory: {test_data_dir}")
@@ -34,9 +34,9 @@ def test_data_loader():
         
         if not loader.data_files:
             print("❌ No data files found!")
-            print("Expected files:")
-            print("  - *.nnrd (volume files)")
-            print("  - *_Mask.seg.nnrd (label files)")
+                    print("Expected files:")
+        print("  - *.nrrd (volume files)")
+        print("  - *_Mask.seg.nrrd (label files)")
             return False
         
         print(f"✅ Found {len(loader.data_files)} data-label pairs")
@@ -116,15 +116,13 @@ def create_sample_data():
     # Save sample files
     sample_name = "20240101_123456_AB_01PPM"
     
-    vol_file = test_dir / f"{sample_name}.nnrd"
-    lbl_file = test_dir / f"{sample_name}_Mask.seg.nnrd"
+    vol_file = test_dir / f"{sample_name}.nrrd"
+    lbl_file = test_dir / f"{sample_name}_Mask.seg.nrrd"
     
-    # Save as NIfTI files (nnrd format is typically NIfTI)
-    vol_nib = nib.Nifti1Image(vol_data, affine=np.eye(4))
-    lbl_nib = nib.Nifti1Image(lbl_data, affine=np.eye(4))
-    
-    nib.save(vol_nib, vol_file)
-    nib.save(lbl_nib, lbl_file)
+    # Save as NRRD files
+    import nrrd
+    nrrd.write(str(vol_file), vol_data)
+    nrrd.write(str(lbl_file), lbl_data)
     
     print(f"✅ Created sample data:")
     print(f"   Volume: {vol_file}")

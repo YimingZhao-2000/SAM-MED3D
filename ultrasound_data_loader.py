@@ -34,19 +34,19 @@ class UltrasoundDataLoader:
         """
         data_files = []
         
-        # Find all .nnrd files (data files)
-        volume_files = list(self.data_dir.glob("*.nnrd"))
+        # Find all .nrrd files (data files)
+        volume_files = list(self.data_dir.glob("*.nrrd"))
         
         for volume_file in volume_files:
-            # Skip mask files (they end with _Mask.seg.nnrd)
-            if volume_file.name.endswith("_Mask.seg.nnrd"):
+            # Skip mask files (they end with _Mask.seg.nrrd)
+            if volume_file.name.endswith("_Mask.seg.nrrd"):
                 continue
                 
-            # Extract base name (everything before .nnrd)
+            # Extract base name (everything before .nrrd)
             base_name = volume_file.stem
             
-            # Look for corresponding mask file (with _Mask.seg.nnrd extension)
-            mask_file = volume_file.parent / f"{base_name}_Mask.seg.nnrd"
+            # Look for corresponding mask file (with _Mask.seg.nrrd extension)
+            mask_file = volume_file.parent / f"{base_name}_Mask.seg.nrrd"
             
             if mask_file.exists():
                 data_files.append((str(volume_file), str(mask_file)))
@@ -70,13 +70,14 @@ class UltrasoundDataLoader:
             Tuple of (volume_data, label_data)
         """
         try:
-            # Load volume
-            vol_nib = nib.load(data_file)
-            vol_data = vol_nib.get_fdata().astype(np.float32)
+            # Load volume using nrrd
+            import nrrd
+            vol_data, vol_header = nrrd.read(data_file)
+            vol_data = vol_data.astype(np.float32)
             
-            # Load label
-            lbl_nib = nib.load(label_file)
-            lbl_data = lbl_nib.get_fdata().astype(np.uint8)
+            # Load label using nrrd
+            lbl_data, lbl_header = nrrd.read(label_file)
+            lbl_data = lbl_data.astype(np.uint8)
             
             # Ensure same dimensions
             if vol_data.shape != lbl_data.shape:
@@ -120,9 +121,9 @@ class UltrasoundDataLoader:
         """
         filename = Path(data_file).name
         
-        # Parse any .nnrd file (flexible naming)
-        # Extract base name for any file ending with .nnrd
-        base_name = filename.replace('.nnrd', '')
+        # Parse any .nrrd file (flexible naming)
+        # Extract base name for any file ending with .nrrd
+        base_name = filename.replace('.nrrd', '')
         
         # Try to parse structured naming if it matches the pattern
         pattern = r'(\d{8})_(\d{6})_([A-Z]{2,3})_(\d{2})PPM'
