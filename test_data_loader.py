@@ -34,9 +34,9 @@ def test_data_loader():
         
         if not loader.data_files:
             print("❌ No data files found!")
-                    print("Expected files:")
-        print("  - *.nrrd (volume files)")
-        print("  - *_Mask.seg.nrrd (label files)")
+            print("Expected files:")
+            print("  - *.nrrd (volume files)")
+            print("  - *_Mask.seg.nrrd (label files)")
             return False
         
         print(f"✅ Found {len(loader.data_files)} data-label pairs")
