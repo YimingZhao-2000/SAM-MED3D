@@ -46,6 +46,7 @@ python infer_medsam2_ultrasound.py \
     -o ./results \
     --prompt_mode mask+point \
     --data_structure us3d \
+    --yaml sam2.1_hiera_tiny_finetune512 \
     --device 0 2>&1 | tee ${LOG_FILE}
 
 # Check if inference was successful
