@@ -1,45 +1,31 @@
 #!/bin/bash
 
-# MedSAM2 Ultrasound Inference with Monitoring
-# This script runs inference and calculates loss metrics
+# MedSAM2 Ultrasound Inference
+# Simple and clean inference script
 
-echo "🚀 Starting MedSAM2 Ultrasound Inference with Monitoring"
-echo "=================================================="
+set -e  # Exit on error
 
-# Create output directories
-mkdir -p results
-mkdir -p logs
-mkdir -p metrics
+echo "🚀 MedSAM2 Ultrasound Inference"
+echo "=============================="
 
-# Set timestamp for logging
-TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-LOG_FILE="logs/inference_${TIMESTAMP}.log"
-METRICS_FILE="metrics/inference_metrics_${TIMESTAMP}.json"
+# Create directories
+mkdir -p results logs metrics
 
-echo "📁 Input directory: ultrasound_data/"
-echo "📁 Output directory: results/"
-echo "📁 Log file: ${LOG_FILE}"
-echo "📁 Metrics file: ${METRICS_FILE}"
-
-# Check if data directory exists
+# Check data
 if [ ! -d "ultrasound_data" ]; then
-    echo "❌ Error: ultrasound_data/ directory not found!"
-    echo "Please ensure your .nrrd files are in ultrasound_data/"
+    echo "❌ ultrasound_data/ not found"
     exit 1
 fi
 
-# Count input files
 VOLUME_COUNT=$(find ultrasound_data/ -name "*.nrrd" ! -name "*_Mask.seg.nrrd" | wc -l)
-MASK_COUNT=$(find ultrasound_data/ -name "*_Mask.seg.nrrd" | wc -l)
-
-echo "📊 Found ${VOLUME_COUNT} volume files and ${MASK_COUNT} mask files"
+echo "📊 Found ${VOLUME_COUNT} volume files"
 
 if [ $VOLUME_COUNT -eq 0 ]; then
-    echo "❌ No volume files found in ultrasound_data/"
+    echo "❌ No volume files found"
     exit 1
 fi
 
-# Run inference with monitoring
+# Run inference
 echo "🔍 Starting inference..."
 python infer_medsam2_ultrasound.py \
     -i ./ultrasound_data \
@@ -48,33 +34,7 @@ python infer_medsam2_ultrasound.py \
     --data_structure us3d \
     --config_path sam2/configs \
     --yaml sam2.1_hiera_t512 \
-    --device 0 2>&1 | tee ${LOG_FILE}
+    --device 0
 
-# Check if inference was successful
-if [ $? -eq 0 ]; then
-    echo "✅ Inference completed successfully!"
-    
-    # Run monitoring to calculate metrics
-    echo ""
-    echo "📊 Calculating metrics..."
-    python monitor_inference.py -i ./ultrasound_data -o ./results -r ${METRICS_FILE}
-    
-    # Display summary
-    echo ""
-    echo "📊 Inference Summary:"
-    echo "===================="
-    echo "Input files: ${VOLUME_COUNT}"
-    echo "Output files: $(find results/ -name "*.nii.gz" | wc -l)"
-    echo "Log file: ${LOG_FILE}"
-    echo "Metrics file: ${METRICS_FILE}"
-    
-else
-    echo "❌ Inference failed! Check the log file: ${LOG_FILE}"
-    exit 1
-fi
-
-echo ""
-echo "🎉 Inference pipeline completed!"
-echo "📁 Results saved in: results/"
-echo "📊 Metrics saved in: ${METRICS_FILE}"
-echo "📝 Log saved in: ${LOG_FILE}" 
+echo "✅ Inference completed!"
+echo "📁 Results in: results/" 
