@@ -163,7 +163,7 @@ python infer_medsam2_ultrasound.py -i ./ultrasound_data -o ./results --data_stru
 ## Dependencies
 
 - PyTorch
-- nibabel (NIfTI I/O)
+- pynrrd (NRRD I/O) - install with: `pip install pynrrd`
 - opencv-python (image processing)
 - tqdm (progress bars)
 - MedSAM2 (model) 

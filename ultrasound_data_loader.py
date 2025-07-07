@@ -70,13 +70,13 @@ class UltrasoundDataLoader:
             Tuple of (volume_data, label_data)
         """
         try:
-            # Load volume using nrrd
-            import nrrd
-            vol_data, vol_header = nrrd.read(data_file)
+            # Load volume using pynrrd
+            import pynrrd
+            vol_data, vol_header = pynrrd.read(data_file)
             vol_data = vol_data.astype(np.float32)
             
-            # Load label using nrrd
-            lbl_data, lbl_header = nrrd.read(label_file)
+            # Load label using pynrrd
+            lbl_data, lbl_header = pynrrd.read(label_file)
             lbl_data = lbl_data.astype(np.uint8)
             
             # Ensure same dimensions

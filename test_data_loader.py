@@ -120,9 +120,9 @@ def create_sample_data():
     lbl_file = test_dir / f"{sample_name}_Mask.seg.nrrd"
     
     # Save as NRRD files
-    import nrrd
-    nrrd.write(str(vol_file), vol_data)
-    nrrd.write(str(lbl_file), lbl_data)
+    import pynrrd
+    pynrrd.write(str(vol_file), vol_data)
+    pynrrd.write(str(lbl_file), lbl_data)
     
     print(f"✅ Created sample data:")
     print(f"   Volume: {vol_file}")
