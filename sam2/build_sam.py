@@ -82,7 +82,21 @@ def build_sam2(
             "++model.sam_mask_decoder_extra_args.dynamic_multimask_stability_thresh=0.98",
         ]
     # Read config and init model
-    cfg = compose(config_name=config_file, overrides=hydra_overrides_extra)
+    # Clear and reinitialize Hydra with correct config directory
+    from hydra.core.global_hydra import GlobalHydra
+    GlobalHydra.instance().clear()
+    
+    # Extract config directory from config_file path
+    import os
+    config_dir = os.path.dirname(config_file)
+    config_name = os.path.basename(config_file).replace('.yaml', '')
+    
+    # Initialize Hydra with the correct config directory
+    import hydra
+    hydra.initialize(config_path=config_dir)
+    
+    # Compose with the config name
+    cfg = compose(config_name=config_name, overrides=hydra_overrides_extra)
     OmegaConf.resolve(cfg)
     model = instantiate(cfg.model, _recursive_=True)
     _load_checkpoint(model, ckpt_path)
@@ -123,7 +137,21 @@ def build_sam2_video_predictor(
     hydra_overrides.extend(hydra_overrides_extra)
 
     # Read config and init model
-    cfg = compose(config_name=config_file, overrides=hydra_overrides)
+    # Clear and reinitialize Hydra with correct config directory
+    from hydra.core.global_hydra import GlobalHydra
+    GlobalHydra.instance().clear()
+    
+    # Extract config directory from config_file path
+    import os
+    config_dir = os.path.dirname(config_file)
+    config_name = os.path.basename(config_file).replace('.yaml', '')
+    
+    # Initialize Hydra with the correct config directory
+    import hydra
+    hydra.initialize(config_path=config_dir)
+    
+    # Compose with the config name
+    cfg = compose(config_name=config_name, overrides=hydra_overrides)
     OmegaConf.resolve(cfg)
     model = instantiate(cfg.model, _recursive_=True)
     _load_checkpoint(model, ckpt_path)
@@ -163,7 +191,21 @@ def build_sam2_video_predictor_npz(
     hydra_overrides.extend(hydra_overrides_extra)
 
     # Read config and init model
-    cfg = compose(config_name=config_file, overrides=hydra_overrides)
+    # Clear and reinitialize Hydra with correct config directory
+    from hydra.core.global_hydra import GlobalHydra
+    GlobalHydra.instance().clear()
+    
+    # Extract config directory from config_file path
+    import os
+    config_dir = os.path.dirname(config_file)
+    config_name = os.path.basename(config_file).replace('.yaml', '')
+    
+    # Initialize Hydra with the correct config directory
+    import hydra
+    hydra.initialize(config_path=config_dir)
+    
+    # Compose with the config name
+    cfg = compose(config_name=config_name, overrides=hydra_overrides)
     OmegaConf.resolve(cfg)
     model = instantiate(cfg.model, _recursive_=True)
     _load_checkpoint(model, ckpt_path)
